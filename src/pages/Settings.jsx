@@ -13,6 +13,9 @@ export default function Settings() {
   const handleResetMission = () => {
     // Reset mission progress only
     localStorage.removeItem('rumidhan_mission_day');
+    localStorage.removeItem('rumidhan_user_progress');
+    localStorage.removeItem('rumidhan_session_progress');
+    localStorage.removeItem('rumidhan_session_state');
     localStorage.removeItem('rumidhan_device_id');
     setShowConfirm(false);
     navigate('/');
@@ -23,6 +26,9 @@ export default function Settings() {
     // Reset everything
     resetAll();
     localStorage.removeItem('rumidhan_mission_day');
+    localStorage.removeItem('rumidhan_user_progress');
+    localStorage.removeItem('rumidhan_session_progress');
+    localStorage.removeItem('rumidhan_session_state');
     localStorage.removeItem('rumidhan_device_id');
     localStorage.removeItem('rumidhan_progress');
     setShowConfirm(false);

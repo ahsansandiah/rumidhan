@@ -13,14 +13,18 @@ export function useAudio() {
       utterance.rate = 0.9; // Slightly slower for children
       utterance.pitch = 1.1; // Slightly higher pitch
 
-      // Try to find Indonesian voice
+      // Pick voice that matches requested language first
       const voices = window.speechSynthesis.getVoices();
-      const indonesianVoice = voices.find(voice =>
-        voice.lang.includes('id') || voice.lang.includes('ID')
-      );
+      const requestedLang = lang.toLowerCase();
+      const requestedBase = requestedLang.split('-')[0];
 
-      if (indonesianVoice) {
-        utterance.voice = indonesianVoice;
+      const exactVoice = voices.find((voice) => voice.lang.toLowerCase() === requestedLang);
+      const baseVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith(requestedBase));
+      const indonesianFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('id'));
+      const selectedVoice = exactVoice || baseVoice || indonesianFallback;
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
       }
 
       window.speechSynthesis.speak(utterance);

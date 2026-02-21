@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDailyMissionLogic } from '../hooks/useDailyMission';
 import { useAudio } from '../hooks/useAudio';
 import Header from '../components/Common/Header';
@@ -11,6 +11,8 @@ import Celebration from '../components/Reward/Celebration';
 
 // Fallback data when Supabase is not configured
 import { getSessionQuestions } from '../data/seedData';
+
+const SESSION_STATE_KEY = 'rumidhan_session_state';
 
 const sessionConfig = {
   iqro: {
@@ -39,9 +41,10 @@ export default function Session() {
   const { playCorrectSound, playWrongSound, speak } = useAudio();
 
   const config = sessionConfig[sessionType];
+  const sessionStorageId = `${day}-${sessionType}`;
 
-  // Get questions for this session
-  const questions = getSessionQuestions(day, sessionType);
+  // Generate once per day/session to avoid reshuffling on every re-render
+  const questions = useMemo(() => getSessionQuestions(day, sessionType), [day, sessionType]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -49,6 +52,37 @@ export default function Session() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_STATE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const saved = parsed?.[sessionStorageId];
+      if (!saved) return;
+
+      setCurrentIndex(saved.currentIndex || 0);
+      setScore(saved.score || 0);
+      setIsComplete(Boolean(saved.isComplete));
+    } catch {
+      // Ignore corrupted local data
+    }
+  }, [sessionStorageId]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_STATE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      parsed[sessionStorageId] = {
+        currentIndex,
+        score,
+        isComplete,
+      };
+      localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(parsed));
+    } catch {
+      // Ignore storage write failure
+    }
+  }, [sessionStorageId, currentIndex, score, isComplete]);
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
@@ -60,8 +94,16 @@ export default function Session() {
       // Session already done, show result
       setIsComplete(true);
       setScore(sessions[sessionType].stars_earned);
+      try {
+        const raw = localStorage.getItem(SESSION_STATE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        delete parsed[sessionStorageId];
+        localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(parsed));
+      } catch {
+        // Ignore storage write failure
+      }
     }
-  }, [sessions, sessionType]);
+  }, [sessions, sessionType, sessionStorageId]);
 
   const handleSelectOption = (option) => {
     if (showResult) return;
@@ -90,7 +132,7 @@ export default function Session() {
     } else {
       // Session complete
       setIsComplete(true);
-      await completeSession(sessionType, score + (isCorrect ? 1 : 0));
+      await completeSession(sessionType, score);
     }
   };
 
@@ -101,6 +143,14 @@ export default function Session() {
   };
 
   const handleCelebrationClose = () => {
+    try {
+      const raw = localStorage.getItem(SESSION_STATE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      delete parsed[sessionStorageId];
+      localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(parsed));
+    } catch {
+      // Ignore storage write failure
+    }
     navigate(`/mission/${day}`);
   };
 

@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/supabase';
 import { useDeviceId } from './useDeviceId';
 
+const isConfigured = api.isSupabaseConfigured();
+
 // Categories
 export function useCategories() {
   return useQuery({
@@ -11,6 +13,7 @@ export function useCategories() {
       if (error) throw error;
       return data;
     },
+    enabled: isConfigured,
   });
 }
 
@@ -23,7 +26,7 @@ export function useDailyMission(dayNumber) {
       if (error) throw error;
       return data;
     },
-    enabled: dayNumber > 0 && dayNumber <= 30,
+    enabled: isConfigured && dayNumber > 0 && dayNumber <= 30,
   });
 }
 
@@ -35,6 +38,7 @@ export function useAllDailyMissions() {
       if (error) throw error;
       return data;
     },
+    enabled: isConfigured,
   });
 }
 
@@ -47,7 +51,7 @@ export function useQuestions(categoryId, dayNumber) {
       if (error) throw error;
       return data;
     },
-    enabled: !!categoryId && dayNumber > 0,
+    enabled: isConfigured && !!categoryId && dayNumber > 0,
   });
 }
 
@@ -62,7 +66,7 @@ export function useUserProgress() {
       if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
       return data;
     },
-    enabled: !!deviceId,
+    enabled: isConfigured && !!deviceId,
   });
 }
 
@@ -72,6 +76,7 @@ export function useUpdateUserProgress() {
 
   return useMutation({
     mutationFn: async (progressData) => {
+      if (!isConfigured) return progressData;
       const { data, error } = await api.upsertUserProgress(deviceId, progressData);
       if (error) throw error;
       return data;
@@ -93,7 +98,7 @@ export function useSessionProgress(dayNumber) {
       if (error) throw error;
       return data;
     },
-    enabled: !!deviceId && dayNumber > 0,
+    enabled: isConfigured && !!deviceId && dayNumber > 0,
   });
 }
 
@@ -103,6 +108,7 @@ export function useUpdateSessionProgress() {
 
   return useMutation({
     mutationFn: async ({ dayNumber, sessionType, ...data }) => {
+      if (!isConfigured) return { day_number: dayNumber, session_type: sessionType, ...data };
       const { data: result, error } = await api.upsertSessionProgress(
         deviceId,
         dayNumber,
@@ -127,6 +133,7 @@ export function useUpdateQuestionProgress() {
 
   return useMutation({
     mutationFn: async ({ questionId, ...data }) => {
+      if (!isConfigured) return { question_id: questionId, ...data };
       const { data: result, error } = await api.upsertQuestionProgress(
         deviceId,
         questionId,

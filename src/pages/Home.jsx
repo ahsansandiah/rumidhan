@@ -40,17 +40,15 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Character/Mascot */}
-      <div className="text-8xl mb-6 animate-bounce-slow">
-        🧒
-      </div>
-
-      {/* Total Stars */}
-      {totalStars > 0 && (
-        <div className="mb-6">
-          <StarDisplay count={totalStars} size="lg" />
+      {/* Character/Mascot + Total Stars */}
+      <div className="mb-6 flex items-center justify-center gap-4">
+        <div className="text-8xl animate-bounce-slow">
+          🧒
         </div>
-      )}
+        {totalStars > 0 && (
+          <StarDisplay count={totalStars} size="lg" />
+        )}
+      </div>
 
       {/* Main Actions */}
       <div className="w-full max-w-sm space-y-4">
@@ -87,6 +85,12 @@ export default function Home() {
             </Button>
           </Link>
         </div>
+
+        <Link to="/materi" className="block">
+          <Button variant="secondary" size="lg" className="w-full">
+            🧠 Menu Materi
+          </Button>
+        </Link>
       </div>
 
       {/* Features */}

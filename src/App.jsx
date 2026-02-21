@@ -8,6 +8,9 @@ import Mission from './pages/Mission'
 import Calendar from './pages/Calendar'
 import Session from './pages/Session'
 import Settings from './pages/Settings'
+import HijaiyahIntro from './pages/HijaiyahIntro'
+import Materi from './pages/Materi'
+import MateriEnglish from './pages/MateriEnglish'
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/session/:dayNumber/:sessionType" element={<Session />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/materi" element={<Materi />} />
+        <Route path="/materi/english" element={<MateriEnglish />} />
+        <Route path="/hijaiyah-intro" element={<HijaiyahIntro />} />
       </Routes>
     </MainLayout>
   )
